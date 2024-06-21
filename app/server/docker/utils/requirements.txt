@@ -1,0 +1,47 @@
+# Core Django framework
+Django==5.0.1
+
+# SQL parsing library used by Django
+sqlparse==0.4.4
+
+# Typing extensions for type hints
+typing_extensions==4.9.0
+
+# Dependencies for API
+djangorestframework==3.14.0                  # Core REST framework for Django
+djangorestframework-simplejwt==5.3.1         # JSON Web Token authentication for DRF
+Pillow==10.1.0                               # Imaging library (PIL Fork)
+PyYAML==6.0.1                                # YAML parser and emitter
+uritemplate==4.1.1                           # URI templates for API endpoints
+
+# PostgreSQL database adapter for Django
+psycopg==3.1.12
+psycopg-binary==3.1.12
+
+# API schema generation tool
+drf_spectacular==0.27.1
+
+# Dependencies for running the app with Gunicorn
+gunicorn==21.2.0                             # Python WSGI HTTP Server for UNIX
+requests==2.31.0                             # HTTP library for making requests
+
+# Dependencies for handling CORS in Django
+django-cors-headers==3.8.0
+
+# Django Channels for WebSockets support
+channels==4.1.0
+channels-redis==4.2.0                        # Redis channel layer backend
+
+# Daphne HTTP/WebSocket server for ASGI
+daphne==4.0.0
+simple-websocket==1.0.0                      # Simple WebSocket library
+
+# Redis cache backend for Django
+django-redis==5.4.0
+redis==5.0.2                                 # Python client for Redis
+
+# Vault token management library
+hvac==2.2.0
+
+# Dependencies for authentication
+pyotp==2.9.0                                 # Time-based One-Time Password library

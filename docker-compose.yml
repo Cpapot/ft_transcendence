@@ -1,0 +1,109 @@
+
+networks:
+  transcendence:
+    name: transcendence
+    driver: bridge
+
+volumes:
+
+  client_code:
+    driver: local
+    driver_opts:
+      device: ./app/client/
+      type: 'none'
+      o: 'bind'
+
+  client_dist_volume:
+    driver: local
+    driver_opts:
+      device: ./app/client/dist/
+      type: 'none'
+      o: 'bind'
+
+  pgdata:
+
+services:
+
+  client-vite:
+    image: node:21-bookworm
+    working_dir: /app/client
+    networks:
+      - transcendence
+    volumes:
+      - client_code:/app/client
+      - client_dist_volume:/client/dist
+    environment:
+      VITE_API_URL: ${API_URL}
+      VITE_CLIENT_ID: ${INTRA_API_CLIENT_ID}
+    command: sh -c "npm install && npm run build && chown -R 1000:1000 /client/dist"
+    restart: on-failure
+
+  client:
+    build: app/client/docker/
+    env_file: 
+      - .env
+    image: transcendence/client
+    container_name: transcendence_client
+    ports:
+      - "8080:443"
+    networks:
+      - transcendence
+    volumes:
+      - ./app/client/dist/:/home/transcendence
+    depends_on:
+      client-vite:
+        condition: service_completed_successfully
+      server:
+        condition: service_started
+    restart: on-failure
+
+  server:
+    build: app/server/docker/
+    env_file: 
+      - .env
+    container_name: transcendence_server
+    image: transcendence/server
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+    volumes:
+      - ./app/server/core/:/home/transcendence/srv
+    ports:
+      - "8000:443"
+      - "6005:6005"
+    networks:
+      - transcendence
+    restart: on-failure
+
+  postgres:
+    env_file: 
+      - .env
+    image: postgres:16.0-bookworm
+    container_name: transcendence_db
+    shm_size: 128mb
+    ports:
+      - "5432:5432"
+    networks:
+      - transcendence
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    restart: always
+
+  redis-cache:
+    image: redis:7.2.4-bookworm
+    networks:
+        - transcendence
+    healthcheck:
+        test: [ "CMD-SHELL", "redis-cli", "--raw", "INCR", "ping" ]
+        interval: 5s
+        timeout: 5s
+        retries: 60
+    command: [sh, -c, "rm -f /data/dump.rdb && redis-server"]
+    restart: on-failure
